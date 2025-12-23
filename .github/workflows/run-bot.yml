@@ -30,8 +30,8 @@ jobs:
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add tweet_queue.json history.json tweet_log.txt queue_log.txt
-          git commit -m "Update queue and logs"
+          git add processed_ids_log.json
+          git commit -m "Update logs"
           git push
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
