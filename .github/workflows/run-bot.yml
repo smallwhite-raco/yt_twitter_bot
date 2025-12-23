@@ -31,7 +31,11 @@ jobs:
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add processed_ids_log.json
-          git commit -m "Update logs"
-          git push
+          if git diff --cached --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "Update log"
+            git push
+
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
