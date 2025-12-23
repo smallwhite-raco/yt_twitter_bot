@@ -1,4 +1,4 @@
-import os, requests, tweepy, schedule, time
+import os, requests, tweepy, feedparser, json
 from dotenv import load_dotenv
 import json
 
@@ -32,7 +32,10 @@ def load_log():
     if not os.path.exists(LOG_FILE):
         return {"videos": {}, "live": {}}
     with open(LOG_FILE, "r") as f:
-        return json.load(f)
+        try:
+            return json.load(f)
+        except json.JSONDecodeError:
+            return {"videos": {}, "live": {}}
 
 
 def save_log(log_data):
@@ -41,39 +44,43 @@ def save_log(log_data):
 
 log_data = load_log()
 
-# check live
-def find_live_video(channel_id):
-    url = "https://www.googleapis.com/youtube/v3/search"
+# check latest video id
+def find_latest_video(channel_id):
+    url = f"https://www.youtube.com/feeds/videos.xml?channel_id={channel_id}"
+    feed = feedparser.parse(url)
+    if feed.entries:
+        latest = feed.entries[0]
+        vid = latest.yt_videoid
+        title = latest.title
+        return vid, title
+    return None, None
+
+# check streaming with YT API
+def is_live(video_id):
+    url = "https://www.googleapis.com/youtube/v3/videos"
     params = {
-        "part": "snippet",
-        "channelId": channel_id,
-        "eventType": "live",
-        "type": "video",
+        "part": "snippet,liveStreamingDetails",
+        "id": video_id,
         "key": YT_KEY
     }
     res = requests.get(url, params=params).json()
     items = res.get("items", [])
     if items:
-        vid = items[0]["id"]["videoId"]
-        title = items[0]["snippet"]["title"]
-        return vid, title
-    return None, None
+        live_details = items[0].get("liveStreamingDetails", {})
+        if "actualStartTime" in live_details and "actualEndTime" not in live_details:
+            return True
+    return False
 
 
 def check_live():
     for cid, info in CHANNEL_IDS.items():
-        vid, title = find_live_video(cid)
-        if vid and log_data["live"].get(cid) != vid:
+        vid, title = find_latest_video(cid)
+        if vid and is_live(vid) and log_data["live"].get(cid) != vid:
             link = f"https://www.youtube.com/watch?v={vid}"
-            text = f" {info['name']} 配信中！\n{title}\n{link}\n{info['tag']}"
+            text = f"{info['name']} 配信中！\n{title}\n{link}\n{info['tag']}"
             try:
-                tweet(text)
+                twitter.update_status(text)
                 log_data["live"][cid] = vid
                 save_log(log_data)
             except Exception as e:
                 print("Tweet Failed:", e)
-
-
-# post twitter
-def tweet(text):
-    twitter.update_status(text)
