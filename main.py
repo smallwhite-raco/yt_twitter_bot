@@ -37,10 +37,11 @@ def load_log():
         except json.JSONDecodeError:
             return {"videos": {}, "live": {}}
 
-
-def save_log(log_data):
+def save_log(data):
+    if "live" not in data:
+        data["live"] = {}
     with open(LOG_FILE, "w") as f:
-        json.dump(log_data, f, indent=2)
+        json.dump(data, f, indent=2, ensure_ascii=False)
 
 log_data = load_log()
 
@@ -79,16 +80,18 @@ def is_live(video_id):
     return False
 
 
-
 def check_live():
     any_live = False
     for cid, info in CHANNEL_IDS.items():
         vid, title = find_latest_video(cid)
-        if vid and is_live(vid) and log_data["live"].get(cid) != vid:
+        print(f"[DEBUG] {cid} latest video={vid}, is_live={is_live(vid)}")
+        if vid and is_live(vid) and log_data.get("live", {}).get(cid) != vid:
             link = f"https://www.youtube.com/watch?v={vid}"
             text = f"{info['name']} 配信中！\n{title}\n{link}\n{info['tag']}"
             try:
                 twitter.update_status(text)
+                if "live" not in log_data:
+                    log_data["live"] = {}
                 log_data["live"][cid] = vid
                 save_log(log_data)
                 print(f"[INFO] Tweeted live: {info['name']} - {title}")
