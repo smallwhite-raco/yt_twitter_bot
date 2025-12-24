@@ -14,14 +14,12 @@ def load_channels():
 CHANNEL_IDS = load_channels()
 
 
-auth = tweepy.OAuth1UserHandler(
-    os.getenv("TWITTER_API_KEY"),
-    os.getenv("TWITTER_API_SECRET"),
-    os.getenv("TWITTER_ACCESS_TOKEN"),
-    os.getenv("TWITTER_ACCESS_SECRET")
+client = tweepy.Client(
+    consumer_key=os.getenv("TWITTER_API_KEY"),
+    consumer_secret=os.getenv("TWITTER_API_SECRET"),
+    access_token=os.getenv("TWITTER_ACCESS_TOKEN"),
+    access_token_secret=os.getenv("TWITTER_ACCESS_SECRET")
 )
-twitter = tweepy.API(auth)
-
 
 #log
 LOG_FILE = "processed_ids_log.json"
@@ -70,9 +68,9 @@ def is_live(video_id):
     if items:
         snippet = items[0]["snippet"]
         live_details = items[0].get("liveStreamingDetails", {})
-        print(f"[DEBUG] {video_id} | {snippet.get('title')} | "
-              f"liveBroadcastContent={snippet.get('liveBroadcastContent')} | "
-              f"liveStreamingDetails={live_details}")
+        # print(f"[DEBUG] {video_id} | {snippet.get('title')} | "
+        #       f"liveBroadcastContent={snippet.get('liveBroadcastContent')} | "
+        #       f"liveStreamingDetails={live_details}")
 
         if snippet.get("liveBroadcastContent") == "live":
             return True
@@ -91,7 +89,7 @@ def check_live():
             link = f"https://www.youtube.com/watch?v={vid}"
             text = f"{info['name']} 配信中！\n{title}\n{link}\n{info['tag']}"
             try:
-                twitter.update_status(text)
+                client.create_tweet(text=text)
                 log_data["live"][cid] = vid
                 save_log(log_data)
                 print(f"[INFO] Tweeted live: {info['name']} - {title}")
