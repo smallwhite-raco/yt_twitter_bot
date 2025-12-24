@@ -66,10 +66,18 @@ def is_live(video_id):
     res = requests.get(url, params=params).json()
     items = res.get("items", [])
     if items:
+        snippet = items[0]["snippet"]
         live_details = items[0].get("liveStreamingDetails", {})
+                print(f"[DEBUG] {video_id} | {snippet.get('title')} | "
+              f"liveBroadcastContent={snippet.get('liveBroadcastContent')} | "
+              f"liveStreamingDetails={live_details}")
+        
+        if snippet.get("liveBroadcastContent") == "live":
+            return True
         if "actualStartTime" in live_details and "actualEndTime" not in live_details:
             return True
     return False
+
 
 
 def check_live():
@@ -82,5 +90,6 @@ def check_live():
                 twitter.update_status(text)
                 log_data["live"][cid] = vid
                 save_log(log_data)
+                print(f"[INFO] Tweeted live: {info['name']} - {title}")
             except Exception as e:
                 print("Tweet Failed:", e)
