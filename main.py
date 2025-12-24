@@ -1,6 +1,5 @@
 import os, requests, tweepy, feedparser, json
 from dotenv import load_dotenv
-import json
 
 load_dotenv()
 
@@ -27,15 +26,17 @@ twitter = tweepy.API(auth)
 #log
 LOG_FILE = "processed_ids_log.json"
 
-
 def load_log():
     if not os.path.exists(LOG_FILE):
         return {"videos": {}, "live": {}}
     with open(LOG_FILE, "r") as f:
         try:
-            return json.load(f)
+            data = json.load(f)
         except json.JSONDecodeError:
-            return {"videos": {}, "live": {}}
+            data = {"videos": {}, "live": {}}
+    if "live" not in data:
+        data["live"] = {}
+    return data
 
 def save_log(data):
     if "live" not in data:
@@ -72,7 +73,7 @@ def is_live(video_id):
         print(f"[DEBUG] {video_id} | {snippet.get('title')} | "
               f"liveBroadcastContent={snippet.get('liveBroadcastContent')} | "
               f"liveStreamingDetails={live_details}")
-        
+
         if snippet.get("liveBroadcastContent") == "live":
             return True
         if "actualStartTime" in live_details and "actualEndTime" not in live_details:
@@ -84,14 +85,13 @@ def check_live():
     any_live = False
     for cid, info in CHANNEL_IDS.items():
         vid, title = find_latest_video(cid)
-        print(f"[DEBUG] {cid} latest video={vid}, is_live={is_live(vid)}")
-        if vid and is_live(vid) and log_data.get("live", {}).get(cid) != vid:
+        live_status = is_live(vid)
+        print(f"[DEBUG] cid={cid}, vid={vid}, title={title}, is_live={live_status}, logged={log_data.get('live', {}).get(cid)}")
+        if vid and live_status and log_data.get("live", {}).get(cid) != vid:
             link = f"https://www.youtube.com/watch?v={vid}"
             text = f"{info['name']} 配信中！\n{title}\n{link}\n{info['tag']}"
             try:
                 twitter.update_status(text)
-                if "live" not in log_data:
-                    log_data["live"] = {}
                 log_data["live"][cid] = vid
                 save_log(log_data)
                 print(f"[INFO] Tweeted live: {info['name']} - {title}")
