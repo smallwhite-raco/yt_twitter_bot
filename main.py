@@ -98,3 +98,7 @@ def check_live():
 
     if not any_live:
         print("no one is streaming")
+
+
+if __name__ == "__main__":
+    check_live()
