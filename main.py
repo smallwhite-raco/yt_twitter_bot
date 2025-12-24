@@ -68,7 +68,7 @@ def is_live(video_id):
     if items:
         snippet = items[0]["snippet"]
         live_details = items[0].get("liveStreamingDetails", {})
-                print(f"[DEBUG] {video_id} | {snippet.get('title')} | "
+        print(f"[DEBUG] {video_id} | {snippet.get('title')} | "
               f"liveBroadcastContent={snippet.get('liveBroadcastContent')} | "
               f"liveStreamingDetails={live_details}")
         
@@ -81,6 +81,7 @@ def is_live(video_id):
 
 
 def check_live():
+    any_live = False
     for cid, info in CHANNEL_IDS.items():
         vid, title = find_latest_video(cid)
         if vid and is_live(vid) and log_data["live"].get(cid) != vid:
@@ -91,5 +92,9 @@ def check_live():
                 log_data["live"][cid] = vid
                 save_log(log_data)
                 print(f"[INFO] Tweeted live: {info['name']} - {title}")
+                any_live = True
             except Exception as e:
-                print("Tweet Failed:", e)
+                print("[ERROR] Tweet Failed:", e)
+
+    if not any_live:
+        print("no one is streaming")
