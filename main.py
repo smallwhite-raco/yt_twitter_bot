@@ -87,7 +87,7 @@ def check_live():
         print(f"[DEBUG] cid={cid}, vid={vid}, title={title}, is_live={live_status}, logged={log_data.get('live', {}).get(cid)}")
         if vid and live_status and log_data.get("live", {}).get(cid) != vid:
             link = f"https://www.youtube.com/watch?v={vid}"
-            text = f"{info['name']} 配信中！\n{title}\n{link}\n{info['tag']}"
+            text = f"{【 配信通知 】info['name']} 配信中！\n{title}\n{link}\n{info['tag']}"
             try:
                 client.create_tweet(text=text)
                 log_data["live"][cid] = vid
