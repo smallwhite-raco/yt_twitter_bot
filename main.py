@@ -3,6 +3,12 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+def notify_telegram(message):
+    token = os.getenv("TELEGRAM_BOT_TOKEN")
+    chat_id = os.getenv("TELEGRAM_CHAT_ID")
+    url = f"https://api.telegram.org/bot{token}/sendMessage"
+    payload = {"chat_id": chat_id, "text": message}
+    requests.post(url, data=payload)
 
 YT_KEY = os.getenv("YOUTUBE_API_KEY")
 
@@ -93,6 +99,7 @@ def check_live():
                 log_data["live"][cid] = vid
                 save_log(log_data)
                 print(f"[INFO] Tweeted live: {info['name']} - {title}")
+                notify_telegram(f"✅ [INFO] Tweeted live: {info['name']} - {title}")
                 any_live = True
             except Exception as e:
                 print("[ERROR] Tweet Failed:", e)
