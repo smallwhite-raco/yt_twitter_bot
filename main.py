@@ -111,7 +111,7 @@ def check_live():
                 error_detail = ""
                 if hasattr(e, "response") and e.response is not None:
                     try:
-                        error_detail = e.response.text  # 原始 JSON
+                        error_detail = e.response.text
                     except Exception:
                         error_detail = str(e)
                 else:
