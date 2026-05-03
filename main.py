@@ -95,6 +95,7 @@ def check_live():
             link = f"https://www.youtube.com/watch?v={vid}"
             text = f"【 配信通知 】\n{info['name']} 配信中！\n{title}\n{link}\n{info['tag']}"
             try:
+                notify_telegram(f"🎬 Live started: {info['name']} - {title}\n{link}")
                 client.create_tweet(text=text)
                 log_data["live"][cid] = vid
                 save_log(log_data)
@@ -102,7 +103,9 @@ def check_live():
                 notify_telegram(f"✅ [INFO] Tweeted live: {info['name']} - {title}")
                 any_live = True
             except Exception as e:
-                print("[ERROR] Tweet Failed:", e)
+                error_msg = f"❗ Tweet Failed for {info['name']} - {title}\nError: {e}"
+                print(error_msg)
+                notify_telegram(error_msg)
 
     if not any_live:
         print("no one is streaming")
