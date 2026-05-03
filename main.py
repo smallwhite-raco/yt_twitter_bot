@@ -108,7 +108,16 @@ def check_live():
                 save_log(log_data)
                 any_live = True
             except Exception as e:
-                error_msg = f"❗ Tweet Failed for {info['name']} - {title}\nError: {e}"
+                error_detail = ""
+                if hasattr(e, "response") and e.response is not None:
+                    try:
+                        error_detail = e.response.text  # 原始 JSON
+                    except Exception:
+                        error_detail = str(e)
+                else:
+                    error_detail = str(e)
+
+                error_msg = f"Error: {error_detail}❗\n Tweet Failed for {info['name']} - {title}"
                 print(error_msg)
                 notify_telegram(error_msg)
 
