@@ -120,6 +120,12 @@ def check_live():
                 error_msg = f"Error: {error_detail}❗\n Tweet Failed for {info['name']} - {title}"
                 print(error_msg)
                 notify_telegram(error_msg)
+                if "401" in error_detail:
+                    log_data["live"][cid] = vid
+                    save_log(log_data)
+                    any_live = True
+
+
 
     if not any_live:
         print("no one is streaming")
