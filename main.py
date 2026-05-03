@@ -90,17 +90,22 @@ def check_live():
     for cid, info in CHANNEL_IDS.items():
         vid, title = find_latest_video(cid)
         live_status = is_live(vid)
-        print(f"[DEBUG] cid={cid}, vid={vid}, title={title}, is_live={live_status}, logged={log_data.get('live', {}).get(cid)}")
-        if vid and live_status and log_data.get("live", {}).get(cid) != vid:
+        logged_vid = log_data.get("live", {}).get(cid)
+
+        print(f"[DEBUG] cid={cid}, vid={vid}, title={title}, is_live={live_status}, logged={logged_vid}")
+
+        if vid and live_status and logged_vid != vid:
             link = f"https://www.youtube.com/watch?v={vid}"
             text = f"【 配信通知 】\n{info['name']} 配信中！\n{title}\n{link}\n{info['tag']}"
+
+            notify_telegram(f"🎬 Live started: {info['name']} - {title}\n{link}")
+            
             try:
-                notify_telegram(f"🎬 Live started: {info['name']} - {title}\n{link}")
                 client.create_tweet(text=text)
-                log_data["live"][cid] = vid
-                save_log(log_data)
                 print(f"[INFO] Tweeted live: {info['name']} - {title}")
                 notify_telegram(f"✅ [INFO] Tweeted live: {info['name']} - {title}")
+                log_data["live"][cid] = vid
+                save_log(log_data)
                 any_live = True
             except Exception as e:
                 error_msg = f"❗ Tweet Failed for {info['name']} - {title}\nError: {e}"
