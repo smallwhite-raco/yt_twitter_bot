@@ -117,7 +117,7 @@ def check_live():
                 else:
                     error_detail = str(e)
 
-                error_msg = f"Error: {error_detail}❗\n Tweet Failed for {info['name']} - {title}"
+                error_msg = f"Tweet Failed for {info['name']} - {title} \n Error: {error_detail}❗"
                 print(error_msg)
                 notify_telegram(error_msg)
                 if "401" in error_detail:
